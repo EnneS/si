@@ -14,22 +14,71 @@ Viewer::Viewer(const QGLFormat &format,const QString &)
 }
 
 void Viewer::generateRandomPoints() {
-  // TODO
+  _points = std::vector<Point>(10);
+
+  for(unsigned int i = 0; i < _points.size(); i++){
+    _points[i].pos = randv2(-1, 1);
+    _points[i].dir = randv2(-0.01,0.01);
+    _points[i].col = randv3(0, 1);
+    _points[i].size = randf(10,20);
+  }
 }
 
 void Viewer::updatePointPositions() {
-  // TODO 
+  for(unsigned int i = 0; i < _points.size(); i++) {
+    _points[i].pos += _points[i].dir;
+
+    int r =_points[i].isDescreasing ? -1 : 1;
+
+    _points[i].size +=  _points[i].size * r * 0.04;
+
+    if(_points[i].size >= 100 || _points[i].size <= 10){
+      _points[i].isDescreasing = !_points[i].isDescreasing;
+    }
+
+    if(_points[i].size < 10) {
+      _points[i].size = 15;
+      _points[i].isDescreasing = false;
+    }
+    
+    if(_points[i].pos.x > 1 || _points[i].pos.x < -1 ) {
+      _points[i].dir.x =  -_points[i].dir.x;
+      _points[i].rebond = true;
+    } else if( _points[i].rebond) {
+      _points[i].rebond = false;
+      // _points[i].size *= 1.5;
+    }
+
+    if(_points[i].pos.y > 1 || _points[i].pos.y < -1 ) {
+      _points[i].dir.y = -_points[i].dir.y;
+      _points[i].rebond = true;
+    } else if( _points[i].rebond) {
+      _points[i].rebond = false;
+      // _points[i].size *= 0.5;
+    }
+  }
 }
 
 void Viewer::paintGL() {
   // clear color and depth buffers 
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  
+
   // TODO
+  for(unsigned int i = 0; i < _points.size(); i++){
+    glPointSize(_points[i].size);
+    
+    glBegin(GL_POINTS);
+    glColor3f(_points[i].col.x, _points[i].col.y, _points[i].col.z);
+    glVertex3f(_points[i].pos.x, _points[i].pos.y, 0);
+    glEnd();
+  }
+
+  updatePointPositions();
 }
 
 void Viewer::resizeGL(int width,int height) {
   // TODO 
+  glViewport(0,0, width, height);
 
 }
 
@@ -65,12 +114,14 @@ void Viewer::initializeGL() {
   }
 
   // init OpenGL settings
-  glClearColor(0.0,0.0,1.0,1.0);
+  glClearColor(0.0,0.0,0.0,1.0);
   glDisable(GL_DEPTH_TEST);
   glPolygonMode(GL_FRONT_AND_BACK,GL_FILL);
 
   // initialize points 
   generateRandomPoints();
+  
+  glEnable(GL_POINT_SMOOTH);
   
   // starts the timer 
   _timer.start();

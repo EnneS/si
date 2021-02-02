@@ -25,6 +25,8 @@ typedef struct Point {
   glm::vec2 dir; // direction
   glm::vec3 col; // color
   float size;    // size 
+  bool rebond;
+  bool isDescreasing = false;
 } Point;
 
 
